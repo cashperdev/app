@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Cashper - Solana on-chain intelligence</title>
+  <desc id="desc">A friendly ghost for understanding public activity across Solana.</desc>
+  <rect width="1200" height="630" fill="#5574b1"/>
+  <circle cx="960" cy="95" r="230" fill="#6886bc" opacity=".45"/>
+  <circle cx="1015" cy="570" r="280" fill="#4c6ba7" opacity=".65"/>
+  <path d="M0 525C170 440 300 590 480 510s320-70 720 22v98H0Z" fill="#4c6ba7"/>
+  <g fill="#fffaf0">
+    <path d="M840 180c-80 0-145 65-145 145v96c0 70 50 126 115 138l30 37 30-37c65-12 115-68 115-138v-96c0-80-65-145-145-145Z"/>
+    <circle cx="790" cy="333" r="12" fill="#172f56"/>
+    <circle cx="890" cy="333" r="12" fill="#172f56"/>
+    <path d="M820 378c15 14 25 14 40 0" fill="none" stroke="#172f56" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <text x="82" y="175" fill="#fffaf0" font-family="Arial, sans-serif" font-size="30" font-weight="700" letter-spacing="7">ONCHAIN INTELLIGENCE</text>
+  <text x="78" y="285" fill="#172f56" font-family="Arial, sans-serif" font-size="94" font-weight="900">CASHPER</text>
+  <text x="84" y="350" fill="#f7edda" font-family="Arial, sans-serif" font-size="34" font-weight="700">Your friendly ghost for the Solana world.</text>
+  <rect x="84" y="414" width="265" height="62" rx="14" fill="#f7edda"/>
+  <text x="116" y="455" fill="#172f56" font-family="Arial, sans-serif" font-size="23" font-weight="700">Less noise. More clarity.</text>
+</svg>

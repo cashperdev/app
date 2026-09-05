@@ -46,6 +46,7 @@ function PaginationLink({
   className,
   isActive,
   size = 'icon',
+  children,
   ...props
 }: PaginationLinkProps) {
   return (
@@ -59,8 +60,9 @@ function PaginationLink({
           aria-current={isActive ? 'page' : undefined}
           data-slot="pagination-link"
           data-active={isActive}
-          {...props}
-        />
+          {...props}>
+          {children}
+        </a>
       }
     />
   );

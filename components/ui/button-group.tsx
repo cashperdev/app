@@ -26,11 +26,9 @@ function ButtonGroup({
   className,
   orientation,
   ...props
-}: React.ComponentProps<'div'> & VariantProps<typeof buttonGroupVariants>) {
+}: React.ComponentProps<'fieldset'> & VariantProps<typeof buttonGroupVariants>) {
   return (
-    <div
-      role="group"
-      data-slot="button-group"
+    <fieldset data-slot="button-group"
       data-orientation={orientation}
       className={cn(buttonGroupVariants({ orientation }), className)}
       {...props}

@@ -24,7 +24,9 @@ export function SearchSheet({ panel, onOpenChange }: { panel: CashperPanel; onOp
   const router = useRouter();
   const [address, setAddress] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const isSearch = panel === 'monitor' || panel === 'analyze';
+  function handleOpenChange(open: boolean) { if (!open) { setAddress(''); setError(null); setIsSubmitting(false); } onOpenChange(open); }
 
   function submit(event: { preventDefault: () => void }) {
     event.preventDefault();
@@ -33,12 +35,13 @@ export function SearchSheet({ panel, onOpenChange }: { panel: CashperPanel; onOp
       setError("That doesn't look like a valid Solana address.");
       return;
     }
-    router.push(`/dashboard/${value}?tab=${panel}&window=7d`);
-    onOpenChange(false);
+    setError(null);
+    setIsSubmitting(true);
+    router.push('/dashboard/' + value + '?tab=' + panel + '&window=7d');
+    handleOpenChange(false);
   }
-
   return (
-    <Sheet open={panel !== null} onOpenChange={onOpenChange}>
+    <Sheet open={panel !== null} onOpenChange={handleOpenChange}>
       <SheetContent side="right" className={styles.sheet}>
         {isSearch ? (
           <>
@@ -51,10 +54,10 @@ export function SearchSheet({ panel, onOpenChange }: { panel: CashperPanel; onOp
               <label htmlFor="solana-address" className={styles.label}>Wallet address or token CA</label>
               <div className={styles.inputWrap}>
                 <Search aria-hidden="true" size={19} />
-                <input id="solana-address" value={address} onChange={(event) => setAddress(event.target.value)} placeholder="Search wallet or token address..." autoComplete="off" spellCheck="false" />
+                <input id="solana-address" value={address} onChange={(event) => { setAddress(event.target.value); if (error) setError(null); }} placeholder="Search wallet or token address..." autoComplete="off" spellCheck="false" aria-invalid={Boolean(error)} aria-describedby={error ? 'solana-address-error' : undefined} disabled={isSubmitting} />
               </div>
-              {error && <p className={styles.error} role="alert">{error}</p>}
-              <button className={styles.submit} type="submit">{panel === 'monitor' ? 'Open Monitor' : 'Analyze address'} <ArrowRight size={18} /></button>
+              {error && <p id="solana-address-error" className={styles.error} role="alert">{error}</p>}
+              <button className={styles.submit} type="submit" disabled={isSubmitting} aria-busy={isSubmitting}>{isSubmitting ? 'Opening…' : panel === 'monitor' ? 'Open Monitor' : 'Analyze address'} <ArrowRight size={18} /></button>
               <p className={styles.note}>Cashper reads public on-chain data. It never asks to connect your wallet.</p>
             </form>
           </>
