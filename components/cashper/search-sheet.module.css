@@ -1,0 +1,22 @@
+.sheet { right:0!important; width:min(480px, 100vw)!important; max-width:100vw!important; padding:34px 28px!important; overflow-y:auto; background:#f7f5ed!important; color:#172f56!important; }
+.header { padding:0!important; gap:12px!important; }
+.eyebrow { color:#5574b1; font-size:11px; font-weight:900; letter-spacing:1.6px; }
+.title { color:#172f56!important; font-size:clamp(30px,7vw,40px)!important; line-height:1.08!important; letter-spacing:-1.4px; font-weight:900!important; }
+.description { display:block; color:#52617b!important; font-size:16px!important; line-height:1.65!important; }
+.solanaContext { display:flex; width:max-content; align-items:center; gap:6px; margin:0 0 8px; color:#5574b1; font-size:11px; font-weight:900; letter-spacing:1.5px; }
+.solanaContext .solana-mark { margin-right:0; transform:scale(.75); transform-origin:left center; }
+.form { display:grid; gap:13px; margin-top:35px; }
+.label { font-size:13px; font-weight:850; }
+.inputWrap { display:flex; align-items:center; gap:10px; min-height:54px; border:1px solid #172f5633; border-radius:12px; padding:0 14px; background:white; color:#5574b1; }
+.inputWrap:focus-within { outline:3px solid #edcea0; outline-offset:2px; border-color:#172f56; }
+.inputWrap input { width:100%; min-width:0; border:0; outline:0; color:#172f56; font:inherit; font-size:14px; background:transparent; }
+.inputWrap input::placeholder { color:#72809a; }
+.submit { min-height:52px; display:flex; justify-content:center; align-items:center; gap:12px; border:0; border-radius:12px; background:#172f56; color:#fffdf6; font:inherit; font-weight:850; cursor:pointer; transition:transform .18s, background .18s; }
+.submit:hover { background:#24436f; transform:translateY(-1px); }
+.submit:focus-visible { outline:3px solid #edcea0; outline-offset:3px; }
+.note { color:#65738b; font-size:12px; line-height:1.55; margin:4px 0 0; }
+.error { color:#a22d41; font-size:13px; margin:0; }
+.comingSoon { display:flex; flex-direction:column; align-items:flex-start; gap:17px; min-height:100%; padding:35px 4px; }
+.icon { display:grid; place-items:center; width:62px; height:62px; border-radius:18px; background:#dce6f4; color:#172f56; }
+.disabled { display:inline-flex; min-height:44px; align-items:center; padding:0 17px; border:1px solid #172f5620; border-radius:10px; color:#6b7890; font-size:13px; font-weight:850; background:#e9edf3; }
+@media (max-width:600px) { .sheet { padding:29px 21px!important; } }
