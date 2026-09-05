@@ -24,4 +24,4 @@ For local Compose testing, run:
 docker compose up --build
 ```
 
-The default local URL is `http://localhost:8080`. Set `WEB_PORT` to use another host port.
+The default local URL is `http://localhost:8080`. Set `WEB_PORT` to use another host port. The port mapping lives in `docker-compose.override.yml`, which Docker Compose loads automatically on localhost but Coolify ignores (Coolify routes traffic through its own proxy to the `nginx` container on port `80`).
