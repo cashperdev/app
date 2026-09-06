@@ -3,7 +3,7 @@ import { windowStart } from './validation';
 import type { ActivityResponse, AddressOverview, AddressKind, CashperActivity, CashperAsset, Coverage } from './types';
 
 const SYSTEM_PROGRAM = '11111111111111111111111111111111';
-const TOKEN_PROGRAMS = new Set(['TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA', 'TokenzQdYhAHwi5X88tq8R8zZKDLQ9ZCxgLrnu8yQZB']);
+const TOKEN_PROGRAMS = new Set(['TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA', 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb']);
 const KNOWN_PROGRAMS: Record<string, string> = {
   'JUP6LkbZbjS1jkkw8T4K8W7HYh8mJ2NvCJKdUMWZ5zP': 'Jupiter',
   '675kPX9MHTjS2zt1qfr1NYHuzefQwSkKAnYQn3oS7GJY': 'Raydium',
@@ -15,6 +15,8 @@ type AccountInfo = { owner: string; data?: { parsed?: { type?: string; info?: Re
 type SignatureInfo = { signature: string; blockTime: number | null; err: unknown };
 type ParsedTransaction = { transaction: { message: { accountKeys: Array<{ pubkey: string }>; instructions: Array<{ programId?: string }> } }; meta: { err: unknown; preBalances: number[]; postBalances: number[]; preTokenBalances?: TokenBalance[]; postTokenBalances?: TokenBalance[] } | null; blockTime: number | null };
 type TokenBalance = { owner?: string; mint: string; uiTokenAmount: { amount: string; decimals: number; uiAmountString?: string } };
+type TokenAccount = { account: { data: { parsed: { info: { mint: string; tokenAmount: { amount: string; decimals: number } } } } } };
+type TokenAccountsResponse = { value: TokenAccount[] };
 
 function rpcUrls() {
   const custom = process.env.SOLANA_RPC_URL;
@@ -72,12 +74,12 @@ export async function getAddressOverview(address: string): Promise<{ overview: A
     if (TOKEN_PROGRAMS.has(value.owner) && accountType === 'account') return { overview: { address, kind: 'token_account', owner: value.owner }, source: source() };
     if (value.owner !== SYSTEM_PROGRAM) return { overview: { address, kind: 'unsupported', owner: value.owner }, source: source() };
 
-    const [balance, legacyTokens, token2022] = await Promise.all([
-      rpc<{ value: number }>('getBalance', [address, { commitment: 'finalized' }]),
-      rpc<{ value: Array<{ account: { data: { parsed: { info: { mint: string; tokenAmount: { amount: string; decimals: number } } } } } }> }>('getTokenAccountsByOwner', [address, { programId: [...TOKEN_PROGRAMS][0] }, { encoding: 'jsonParsed' }]),
-      rpc<{ value: Array<{ account: { data: { parsed: { info: { mint: string; tokenAmount: { amount: string; decimals: number } } } } } }> }>('getTokenAccountsByOwner', [address, { programId: [...TOKEN_PROGRAMS][1] }, { encoding: 'jsonParsed' }]),
-    ]);
-    const tokens = [...legacyTokens.value, ...token2022.value].map((item) => item.account.data.parsed.info).filter((item) => item.tokenAmount.amount !== '0').map((item) => asAsset(item.mint, item.tokenAmount.amount, item.tokenAmount.decimals));
+    const balance = await rpc<{ value: number }>('getBalance', [address, { commitment: 'finalized' }]);
+    const tokenAccountResults = await Promise.allSettled(
+      [...TOKEN_PROGRAMS].map((programId) => rpc<TokenAccountsResponse>('getTokenAccountsByOwner', [address, { programId }, { encoding: 'jsonParsed' }])),
+    );
+    const tokenAccounts = tokenAccountResults.flatMap((result) => result.status === 'fulfilled' ? result.value.value : []);
+    const tokens = tokenAccounts.map((item) => item.account.data.parsed.info).filter((item) => item.tokenAmount.amount !== '0').map((item) => asAsset(item.mint, item.tokenAmount.amount, item.tokenAmount.decimals));
     return { overview: { address, kind: 'wallet', owner: value.owner, solBalance: asAsset('So11111111111111111111111111111111111111111', String(balance.value), 9, 'SOL'), tokenAssets: tokens }, source: source() };
   });
 }
