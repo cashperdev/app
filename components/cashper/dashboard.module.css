@@ -146,7 +146,7 @@
 .tokenFlowRow div { padding:7px 0; }
 .panelNote { max-width:540px; }
 
-@media(max-width:600px) { .analysisGrid > .panel { box-shadow:0 10px 24px #172f5608; }.coverageGrid div,.flowSummary div { padding:10px; } }
+@media(max-width:600px) { .analysisGrid > .panel { box-shadow:0 10px 24px #172f5608; }.coverageGrid div,.flowSummary div { padding:10px; }.tokenNotice { grid-template-columns:auto minmax(0,1fr); }.tokenNoticeActions { grid-column:2; justify-content:flex-start; } }
 .searchHint { flex-basis:100%; margin:0 2px 3px; color:#657693; font-size:12px; line-height:1.5; }
 .lookupNotice { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:20px; padding:28px; border:1px solid #e7d5b2; border-radius:18px; background:#f7edda; box-shadow:0 14px 34px #172f5608; }
 .lookupNoticeLabel { color:#8b6b35; font-size:10px; font-weight:900; letter-spacing:1px; }
