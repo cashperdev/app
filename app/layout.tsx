@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Nunito_Sans } from 'next/font/google';
 import './globals.css';
+import { Toaster } from '@/components/ui/toast';
 
 const siteUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://cashperghost.com';
 const siteName = 'Cashper';
@@ -96,7 +97,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
-        {children}
+        <Toaster>{children}</Toaster>
       </body>
     </html>
   );

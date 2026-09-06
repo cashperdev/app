@@ -8,6 +8,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import type { ActivityResponse, AddressOverview, ApiResponse, CashperActivity, Coverage, WalletAnalysis } from '@/lib/cashper/types';
 import { SolanaMark } from './solana-mark';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/components/ui/toast';
 import styles from './dashboard.module.css';
 
 type Tab = 'monitor' | 'analyze' | 'protect';
@@ -41,15 +42,15 @@ function useJson<T>(url?: string) {
   return { ...state, loading: Boolean(url) && state.key !== key, retry: () => setRetry((value) => value + 1) };
 }
 
-function AddressSearch({ initial, className }: { initial?: string; className?: string }) {
+function AddressSearch({ initial, className, showHint = false }: { initial?: string; className?: string; showHint?: boolean }) {
   const router = useRouter(); const [value, setValue] = useState(initial ?? ''); const [error, setError] = useState<string | null>(null); const [isSubmitting, setIsSubmitting] = useState(false);
   function submit(event: { preventDefault: () => void }) {
     event.preventDefault();
     const address = value.trim();
-    if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)) { setError("That doesn't look like a valid Solana address."); setIsSubmitting(false); return; }
+    if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)) { const message = "Paste a valid Solana wallet address or token mint."; setError(message); toast.add({ title: "Invalid Solana address", description: message, type: "error" }); setIsSubmitting(false); return; }
     setError(null); setIsSubmitting(true); router.push('/dashboard/' + address + '?tab=monitor&window=7d');
   }
-  return <form className={styles.search + ' ' + (className ?? '')} onSubmit={submit} aria-busy={isSubmitting}><Search size={18}/><label className="sr-only" htmlFor="dashboard-search">Search a Solana address</label><input id="dashboard-search" value={value} onChange={(event) => { setValue(event.target.value); if (error) setError(null); }} placeholder="Search wallet or token address..." aria-invalid={Boolean(error)} aria-describedby={error ? 'dashboard-search-error' : undefined}/><button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Analyzing…' : 'Analyze'} <ArrowRight size={15} /></button>{error && <p id="dashboard-search-error" className={styles.searchError} role="alert">{error}</p>}</form>;
+  return <form className={styles.search + ' ' + (className ?? '')} onSubmit={submit} aria-busy={isSubmitting}><Search size={18}/><label className="sr-only" htmlFor="dashboard-search">Search a Solana address</label><input id="dashboard-search" value={value} onChange={(event) => { setValue(event.target.value); if (error) setError(null); }} placeholder="Paste a Solana wallet or token mint..." aria-invalid={Boolean(error)} aria-describedby={[showHint ? 'dashboard-search-hint' : '', error ? 'dashboard-search-error' : ''].filter(Boolean).join(' ') || undefined}/><button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Analyzing…' : 'Analyze'} <ArrowRight size={15} /></button>{showHint && <p id="dashboard-search-hint" className={styles.searchHint}>Use a Solana wallet address or SPL/Token-2022 token mint. For GMGN, copy the token mint/contract address, not a pool, pair, or holder address.</p>}{error && <p id="dashboard-search-error" className={styles.searchError} role="alert">{error}</p>}</form>;
 }
 
 function DataState({ error, retry }: { error?: string; retry?: () => void }) {
@@ -60,6 +61,12 @@ function DataState({ error, retry }: { error?: string; retry?: () => void }) {
 
 function EmptyState({ message, actionLabel, onAction }: { message: string; actionLabel?: string; onAction?: () => void }) {
   return <div className={styles.empty}><p>{message}</p>{actionLabel && onAction && <button className={styles.retry} onClick={onAction}>{actionLabel}</button>}</div>;
+}
+
+function unsupportedAddressCopy(kind: AddressOverview['kind']) {
+  if (kind === 'token_account') return { title: 'This is a token account, not the token mint.', body: 'Open the token page in GMGN and copy its Solana mint/contract address. A holder or token-account address cannot be used here.' };
+  if (kind === 'unsupported') return { title: 'This Solana address type is not supported yet.', body: 'It may be a pool, program, bonding curve, or another account. Cashper currently supports wallets and SPL/Token-2022 token mints.' };
+  return { title: 'No Solana account was found.', body: 'Check that the address is correct and still exists on Solana. If you copied it from GMGN, use the token mint/contract address rather than a pool or holder address.' };
 }
 
 function Metric({ label, value, note }: { label: string; value: string; note?: string }) {
@@ -202,7 +209,7 @@ export function DashboardScreen({ address: suppliedAddress }: { address?: string
   const tab: Tab = !isWallet && requestedTab !== 'protect' ? 'monitor' : requestedTab;
   const activity = useJson<ActivityResponse>(address && identity.data?.kind === 'wallet' ? `/api/v1/address/${address}/activity?window=${window}` : undefined);
   const analysis = useJson<{ address: string; analysis: WalletAnalysis; coverage: ActivityResponse['coverage'] }>(address && identity.data?.kind === 'wallet' ? `/api/v1/address/${address}/analysis?window=${window}` : undefined);
-  const title = useMemo(() => identity.data?.kind === 'token' ? 'Token Overview' : 'Wallet Overview', [identity.data?.kind]);
+  const title = useMemo(() => identity.data?.kind === 'token' ? 'Token Overview' : identity.data?.kind === 'wallet' ? 'Wallet Overview' : 'Address Check', [identity.data?.kind]);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle');
   const [isPending, startTransition] = useTransition();
   const setTab = (next: Tab) => { if (next === tab) return; startTransition(() => router.replace('/dashboard/' + address + '?tab=' + next + '&window=' + window)); };
@@ -214,7 +221,7 @@ export function DashboardScreen({ address: suppliedAddress }: { address?: string
         <span className={`${styles.eyebrow} ${styles.solanaEyebrow}`}>ONCHAIN INTELLIGENCE · <SolanaMark /> SOLANA</span>
         <h1>See the signal<br/><em>behind the address.</em></h1>
         <p>Turn a public wallet or token address into a calmer, clearer view of what is happening on-chain.</p>
-        <AddressSearch className={styles.landingSearch}/>
+        <AddressSearch className={styles.landingSearch} showHint/>
         <div className={styles.landingMeta}><span><Check size={14}/> Public data only</span><span><Clock3 size={14}/> 24H · 7D · 30D views</span></div>
       </section>
       <aside className={styles.landingAside} aria-label="Cashper capabilities">
@@ -238,8 +245,8 @@ export function DashboardScreen({ address: suppliedAddress }: { address?: string
   }
   return <main className={styles.dashboard} aria-busy={isPending}>
     <header className={styles.topbar}><Link href="/" className={`wordmark ${styles.brand}`}><Ghost size={29} strokeWidth={2.5}/> CASHPER</Link><AddressSearch initial={address}/></header>
-    <section className={styles.hero}><div><Link className={styles.back} href="/dashboard"><ArrowLeft size={16}/> New search</Link><span className={`${styles.eyebrow} ${styles.solanaEyebrow}`}><SolanaMark /> SOLANA {overview.kind === 'token' ? 'TOKEN' : 'WALLET'}</span><h1>{title}</h1><div className={styles.address}><code title={address}>{short(address, 7)}</code><button onClick={copyAddress} aria-label={copyState === 'copied' ? 'Address copied' : 'Copy address'}><Copy size={15}/></button>{copyState !== 'idle' && <output className={styles.copyFeedback + ' ' + (copyState === 'error' ? styles.copyError : '')} aria-live="polite">{copyState === 'copied' ? 'Copied' : 'Copy failed'}</output>}<a href={'https://explorer.solana.com/address/' + address} target="_blank" rel="noreferrer" aria-label="View on Solana Explorer"><ExternalLink size={15}/></a></div></div>{isWallet && <div className={styles.window} aria-busy={isPending}><span>WINDOW</span>{(['24h','7d','30d'] as const).map((item) => <button key={item} className={window === item ? styles.selected : ''} onClick={() => { startTransition(() => router.replace('/dashboard/' + address + '?tab=' + tab + '&window=' + item)); }} disabled={isPending} aria-pressed={window === item}>{item}</button>)}</div>}</section>
+    <section className={styles.hero}><div><Link className={styles.back} href="/dashboard"><ArrowLeft size={16}/> New search</Link><span className={`${styles.eyebrow} ${styles.solanaEyebrow}`}><SolanaMark /> SOLANA {overview.kind === 'token' ? 'TOKEN' : overview.kind === 'wallet' ? 'WALLET' : 'ADDRESS'}</span><h1>{title}</h1><div className={styles.address}><code title={address}>{short(address, 7)}</code><button onClick={copyAddress} aria-label={copyState === 'copied' ? 'Address copied' : 'Copy address'}><Copy size={15}/></button>{copyState !== 'idle' && <output className={styles.copyFeedback + ' ' + (copyState === 'error' ? styles.copyError : '')} aria-live="polite">{copyState === 'copied' ? 'Copied' : 'Copy failed'}</output>}<a href={'https://explorer.solana.com/address/' + address} target="_blank" rel="noreferrer" aria-label="View on Solana Explorer"><ExternalLink size={15}/></a></div></div>{isWallet && <div className={styles.window} aria-busy={isPending}><span>WINDOW</span>{(['24h','7d','30d'] as const).map((item) => <button key={item} className={window === item ? styles.selected : ''} onClick={() => { startTransition(() => router.replace('/dashboard/' + address + '?tab=' + tab + '&window=' + item)); }} disabled={isPending} aria-pressed={window === item}>{item}</button>)}</div>}</section>
     <nav className={styles.tabs} aria-label="Product sections"><button className={tab === 'monitor' ? styles.selected : ''} onClick={() => setTab('monitor')} disabled={isPending} aria-current={tab === 'monitor' ? 'page' : undefined}><Radar size={16}/> Monitor</button><button className={!isWallet ? styles.disabledTab : tab === 'analyze' ? styles.selected : ''} onClick={() => isWallet && setTab('analyze')} disabled={!isWallet || isPending} aria-disabled={!isWallet} aria-current={tab === 'analyze' ? 'page' : undefined} title={!isWallet ? 'Analyze is currently available for wallet addresses.' : undefined}><Sparkles size={16}/> Analyze {!isWallet && <small>Wallets only</small>}</button><button className={tab === 'protect' ? styles.selected : ''} onClick={() => setTab('protect')} disabled={isPending} aria-current={tab === 'protect' ? 'page' : undefined}><ShieldCheck size={16}/> Protect <small>Coming soon</small></button></nav>
-    {tab === 'protect' ? <section className={styles.protect}><ShieldCheck size={34}/><span className={styles.eyebrow}>PROTECT</span><h2>Coming Soon</h2><p>Understand potentially risky wallet interactions before taking action.</p><span>Risk awareness for on-chain activity.</span></section> : overview.kind === 'token' ? <TokenOverview overview={overview}/> : overview.kind !== 'wallet' ? <section className={styles.content}><EmptyState message="We couldn't identify this address as a wallet or token mint." actionLabel="Search another address" onAction={() => router.push('/dashboard')}/></section> : tab === 'monitor' ? <Monitor key={address + ':' + window + ':' + (activity.data?.nextCursor ?? '')} overview={overview} activity={activity} analysis={analysis} address={currentAddress} window={window} onTabChange={setTab} onNewSearch={() => router.push('/dashboard')}/> : <Analyze analysis={analysis} onTabChange={setTab}/>}
+    {tab === 'protect' ? <section className={styles.protect}><ShieldCheck size={34}/><span className={styles.eyebrow}>PROTECT</span><h2>Coming Soon</h2><p>Understand potentially risky wallet interactions before taking action.</p><span>Risk awareness for on-chain activity.</span></section> : overview.kind === 'token' ? <TokenOverview overview={overview}/> : overview.kind !== 'wallet' ? <section className={styles.content}><article className={styles.lookupNotice} role="alert"><div><span className={styles.lookupNoticeLabel}>LOOKUP NEEDS A DIFFERENT ADDRESS</span><h2>{unsupportedAddressCopy(overview.kind).title}</h2><p>{unsupportedAddressCopy(overview.kind).body}</p></div><Link className={styles.retry} href="/dashboard">Search another address</Link></article></section> : tab === 'monitor' ? <Monitor key={address + ':' + window + ':' + (activity.data?.nextCursor ?? '')} overview={overview} activity={activity} analysis={analysis} address={currentAddress} window={window} onTabChange={setTab} onNewSearch={() => router.push('/dashboard')}/> : <Analyze analysis={analysis} onTabChange={setTab}/>}
   </main>;
 }

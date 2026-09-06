@@ -147,3 +147,9 @@
 .panelNote { max-width:540px; }
 
 @media(max-width:600px) { .analysisGrid > .panel { box-shadow:0 10px 24px #172f5608; }.coverageGrid div,.flowSummary div { padding:10px; } }
+.searchHint { flex-basis:100%; margin:0 2px 3px; color:#657693; font-size:12px; line-height:1.5; }
+.lookupNotice { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:20px; padding:28px; border:1px solid #e7d5b2; border-radius:18px; background:#f7edda; box-shadow:0 14px 34px #172f5608; }
+.lookupNoticeLabel { color:#8b6b35; font-size:10px; font-weight:900; letter-spacing:1px; }
+.lookupNotice h2 { margin:8px 0 6px; color:#172f56; font-size:22px; letter-spacing:-.5px; }
+.lookupNotice p { max-width:720px; margin:0; color:#53617a; font-size:14px; line-height:1.6; }
+@media(max-width:600px) { .lookupNotice { grid-template-columns:1fr; padding:20px; } }
